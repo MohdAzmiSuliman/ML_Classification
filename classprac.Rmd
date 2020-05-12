@@ -15,7 +15,6 @@ p_load(mlbench, tidyverse, rpart, e1071, caret, summarytools, plyr)
 ```
 
 ```{r}
-library(mlbench)
 data("PimaIndiansDiabetes")
 dataset <- PimaIndiansDiabetes
 dataset
@@ -44,6 +43,14 @@ testds <- ds_nona[-sRow,]
 ```
 
 # Decision Tree
+
+## Logistic Regression
+
+```{r}
+logregmod <- glm(diabetes ~ /*., data = trainds, family = "binomial")
+summary(logregmod)
+```
+
 
 ## Model Building
 
@@ -80,6 +87,7 @@ confusionMatrix(dtpredresult, testds$diabetes, positive = "pos")
 nb_mod <- naiveBayes(diabetes~., 
                      data = trainds,
                      method = "class")
+
 ```
 
 ## Model evaluation
