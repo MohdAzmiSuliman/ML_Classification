@@ -1,0 +1,237 @@
+---
+title: "machine learning"
+author: "Mohd Azmi"
+date: "20/03/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(pacman)
+p_load(mlbench, tidyverse, rpart, caret, summarytools, plyr, class, neuralnet)
+```
+
+```{r}
+data("PimaIndiansDiabetes")
+dataset <- PimaIndiansDiabetes
+dataset
+freq(dataset)
+descr(dataset)
+```
+
+```{r}
+anyNA(dataset)
+ds_nona <- dataset %>% drop_na()
+ds_nona
+```
+
+# random sampling
+
+## seed set
+
+```{r}
+RNGkind(sample.kind = "default")
+set.seed(2020)
+```
+
+
+```{r}
+sample(10, 5) #sample(value, sample)
+```
+
+# split dataset
+
+```{r}
+sRow <- sample(nrow(ds_nona), nrow(ds_nona)*.7)
+trainds <- ds_nona[sRow,]
+testds <- ds_nona[-sRow,]
+```
+
+# Decision Tree
+
+## Model Building
+
+```{r}
+dtmod <- rpart(diabetes~.,
+               data = trainds,
+               method = "class",
+               parms = list(split = "information"))
+plot(dtmod)
+text(dtmod)
+```
+
+## Model evaluation
+
+```{r}
+dtpredresult <- predict(dtmod, testds, type = "class")
+
+dtconfmat <- table(dtpredresult, testds$diabetes)
+dtconfmat
+
+dtaccuracy <- sum(diag(dtconfmat)) / sum(dtconfmat) # (a+d) / (a+b+c+d) = overall percentage correct
+dtaccuracy 
+```
+
+```{r}
+confusionMatrix(dtpredresult, testds$diabetes, positive = "pos")
+
+```
+
+# K-nearest neighbour
+
+## Normalized value
+
+```{r}
+normalize = function(x){
+  return((x - min(x)) / (max(x) - min(x)))
+}
+```
+
+```{r}
+ds2 <- ds_nona
+ds2
+ds2[1:8] <- as.data.frame(lapply(ds2[1:8], normalize))
+```
+
+## split
+
+```{r}
+
+sRow <- sample(nrow(ds2), nrow(ds2)*.7)
+trainds2 <- ds2[sRow,]
+testds2 <- ds2[-sRow,]
+```
+
+## model building
+
+```{r}
+knnmod <- knn(train = trainds2[,1:8],
+              test = testds2[,1:8],
+              cl = trainds2[,9],
+              k=5)
+
+```
+
+## Evaluation
+
+```{r}
+confusionMatrix(knnmod, testds2$diabetes, positive = "pos")
+```
+
+
+# Neural Network
+
+## Normalized data
+
+use normalized above
+
+## Model
+
+## evaluation
+
+predict
+
+```{r}
+
+```
+
+
+# Naive Bayes Classifier
+
+## Model Building
+
+```{r}
+nb_mod <- naiveBayes(diabetes~., 
+                     data = trainds,
+                     method = "class")
+
+confusionMatrix()
+```
+
+## Model evaluation
+
+```{r}
+nbmod_predresult <- predict(nb_mod, testds, type = "class")
+
+nbconfmat <- table(nbmod_predresult, testds$diabetes)
+nbconfmat
+
+nbaccuracy <- sum(diag(nbconfmat)) / sum(nbconfmat)
+nbaccuracy
+```
+
+```{r}
+confusionMatrix(nbmod_predresult, testds$diabetes, positive = "pos")
+```
+
+
+# 10-fold cross validation
+
+## Decision Tree Model
+
+### defining variables
+
+```{r}
+k <- 10
+dtaccuracy2 <- rep(NA, k)
+```
+
+### creating 10 folds
+
+```{r}
+folds <- split(dataset,
+               cut(1:nrow(dataset),10)
+               )
+```
+
+
+### iterating the 10-fold
+
+```{r}
+for (i in 1:k) {
+  test = ldply(folds[i], data.frame)
+  train = ldply(folds[-i], data.frame)
+  
+  test$.id = NULL
+  train$.id = NULL
+  
+  dtmodel2 = rpart(diabetes~., data = train, method = "class", parms = list(split = "information"))
+  dtpredresult2 = predict(dtmodel2, test, type = "class")
+  
+  dtconfmat2 = table(dtpredresult2, test$diabetes)
+  dtaccuracy2[i] = sum(diag(dtconfmat2)) / sum(dtconfmat2)
+}
+
+dtaccuracy2
+mean(dtaccuracy2)
+```
+
+## Naive Bayesian 
+
+```{r}
+nbaccuracy2 <- rep(NA, k)
+```
+
+### iterating the 10-fold
+
+```{r}
+for (i in 1:k) {
+  test = ldply(folds[i], data.frame)
+  train = ldply(folds[-i], data.frame)
+  
+  test$.id = NULL
+  train$.id = NULL
+
+  nbmodel2 = naiveBayes(diabetes~., data = train, method = "class")
+  nbpredresult2 = predict(nbmodel2, test, type = "class")
+  
+  nbconfmat2 = table(nbpredresult2, test$diabetes)
+  nbaccuracy2[i] = sum(diag(nbconfmat2)) / sum(nbconfmat2)
+}
+
+nbaccuracy2
+mean(nbaccuracy2)
+```
