@@ -9,10 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Environment
+
+## Library
+
 ```{r}
 library(pacman)
 p_load(mlbench, tidyverse, rpart, caret, summarytools, plyr, class, neuralnet)
 ```
+
+## dataset
 
 ```{r}
 data("PimaIndiansDiabetes")
@@ -136,35 +142,6 @@ predict
 
 ```{r}
 
-```
-
-
-# Naive Bayes Classifier
-
-## Model Building
-
-```{r}
-nb_mod <- naiveBayes(diabetes~., 
-                     data = trainds,
-                     method = "class")
-
-confusionMatrix()
-```
-
-## Model evaluation
-
-```{r}
-nbmod_predresult <- predict(nb_mod, testds, type = "class")
-
-nbconfmat <- table(nbmod_predresult, testds$diabetes)
-nbconfmat
-
-nbaccuracy <- sum(diag(nbconfmat)) / sum(nbconfmat)
-nbaccuracy
-```
-
-```{r}
-confusionMatrix(nbmod_predresult, testds$diabetes, positive = "pos")
 ```
 
 
